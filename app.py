@@ -213,7 +213,7 @@ with tab1:
                 obj = imaplib.IMAP4_SSL('imap.gmail.com', 993)
                 obj.login(GMAIL_ACCOUNT, GMAIL_APP_PASSWORD)
                 obj.select('[Gmail]/Drafts')
-                obj.append('[Gmail]/Drafts', '', imaplib.Time2Internaldate(time.time()), msg.as_bytes())
+                obj.append('"[Gmail]/Drafts"', '(\\Draft)', imaplib.Time2Internaldate(time.time()), msg.as_bytes())
                 obj.logout()
                 return True
             except Exception as e:
