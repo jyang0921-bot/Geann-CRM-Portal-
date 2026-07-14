@@ -14,6 +14,30 @@ import openai
 # 1. 基礎網頁配置與美化
 st.set_page_config(page_title="Geann B2B 業務戰情監控版 (完全體)", layout="wide")
 
+# 🔐 新增密碼登入驗證機制
+def check_password():
+    if "password_correct" not in st.session_state:
+        st.session_state["password_correct"] = False
+        
+    if st.session_state["password_correct"]:
+        return True
+
+    st.markdown("<h2 style='text-align: center; color: #1E3A8A;'>🔒 Geann B2B 戰情室安全登入</h2>", unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        password = st.text_input("請輸入團隊通關密碼：", type="password")
+        if st.button("確認登入"):
+            correct_password = st.secrets.get("LOGIN_PASSWORD", "GeannAdmin") # 若沒設預設為 GeannAdmin
+            if password == correct_password:
+                st.session_state["password_correct"] = True
+                st.rerun()
+            else:
+                st.error("❌ 密碼錯誤，請重新輸入！")
+    return False
+
+if not check_password():
+    st.stop() # 密碼不對，直接攔截，後面的內容完全不載入！
+
 st.markdown("""
     <style>
     .main-title { font-size:32px; font-weight:bold; color:#1E3A8A; margin-bottom:10px; }
