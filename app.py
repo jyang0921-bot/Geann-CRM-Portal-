@@ -186,6 +186,7 @@ with tab1:
                 st.rerun()
         
         # --- 信件發送模組 ---
+        # --- 信件發送模組 (含雷達偵測與 Debug 功能) ---
         def create_draft_via_gmail(to_email, subject, html_content):
             try:
                 msg = MIMEMultipart('related')
@@ -210,14 +211,41 @@ with tab1:
                         msg.attach(msgImage2)
                 
                 import imaplib, time
+                # 連線伺服器
                 obj = imaplib.IMAP4_SSL('imap.gmail.com', 993)
                 obj.login(GMAIL_ACCOUNT, GMAIL_APP_PASSWORD)
-                obj.select('[Gmail]/Drafts')
-                obj.append('"[Gmail]/Drafts"', '(\\Draft)', imaplib.Time2Internaldate(time.time()), msg.as_bytes())
+                
+                # 🔍 雷達偵測：找出真正對應「草稿」的系統資料夾名稱
+                typ, data = obj.list()
+                draft_folder = '"[Gmail]/Drafts"' # 預設值
+                for box in data:
+                    box_str = box.decode('utf-8')
+                    # 尋找帶有 Drafts 標籤的資料夾
+                    if '\\Drafts' in box_str:
+                        # 擷取 Gmail 回傳格式中的資料夾名稱
+                        parts = box_str.split(' "/" ')
+                        if len(parts) >= 2:
+                            draft_folder = parts[1].strip()
+                        break
+                
+                # 💡 在畫面上印出系統找到了哪個資料夾，讓你安心
+                st.info(f"🔍 [Debug 追蹤] 系統偵測到你的真實草稿匣路徑為: {draft_folder}")
+                
+                # 切換到該資料夾並塞入信件
+                obj.select(draft_folder)
+                status, response = obj.append(draft_folder, '(\\Draft)', imaplib.Time2Internaldate(time.time()), msg.as_bytes())
+                
                 obj.logout()
-                return True
+                
+                # 嚴格確認是否真的寫入成功
+                if status == 'OK':
+                    return True
+                else:
+                    st.error(f"❌ 寫入失敗，伺服器回傳: {response}")
+                    return False
+                    
             except Exception as e:
-                st.error(f"草稿塞入失敗: {e}")
+                st.error(f"❌ 草稿塞入發生嚴重錯誤: {e}")
                 return False
 
         def ask_ai_to_write(company, name, title, stage="first"):
