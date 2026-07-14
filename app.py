@@ -112,6 +112,9 @@ with tab1:
             # 對齊欄位
             cols = ["進度狀態", "已回覆", "業務備註", "最後聯絡日期", "負責業務", "公司名稱", "網址", "First Name", "Last Name", "Job Title", "Email"]
             input_df = input_df[cols]
+
+            # 🧼 關鍵修復：將 Excel 中的所有空白（NaN）徹底消滅，轉為乾淨的空字串
+            input_df = input_df.fillna("")
             
             if st.button("🔥 確認將新名單匯入雲端資料庫"):
                 if not df_crm.empty:
